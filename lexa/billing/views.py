@@ -15,12 +15,18 @@ from .serializers import (
 class BillingInfoListCreateView(generics.ListCreateAPIView):
     serializer_class = BillingInfoSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['case', 'fee_type', 'payment_status']
+    filterset_fields = ['case', 'payment_status']
     search_fields = ['invoice_number', 'case__reference', 'case__title']
     ordering_fields = ['invoice_date', 'due_date', 'amount']
 
     def get_queryset(self):
         return BillingInfo.objects.filter(user=self.request.user).select_related('case')
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print(request.data)
+        return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

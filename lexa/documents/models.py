@@ -85,14 +85,12 @@ class Document(models.Model):
     file_type = models.CharField(max_length=50, blank=True)
     
     # Relationships
-    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='documents')
     template = models.ForeignKey(DocumentTemplate, on_delete=models.SET_NULL, null=True, blank=True)
     
     # Document metadata
     version = models.PositiveIntegerField(default=1)
     is_final = models.BooleanField(default=False)
     is_confidential = models.BooleanField(default=False)
-    tags = models.JSONField(default=list, blank=True)
     
     # Legal tracking
     date_signed = models.DateField(null=True, blank=True)

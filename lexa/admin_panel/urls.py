@@ -5,6 +5,7 @@ urlpatterns = [
     path('users/', views.AdminUserListView.as_view(), name='admin_user_list'),
     path('users/<int:user_id>/approve/', views.approve_user, name='approve_user'),
     path('users/<int:user_id>/block/', views.block_user, name='block_user'),
+    path('users/<int:user_id>/delete/', views.delete_user, name='delete_user'),
     
     path('actions/', views.AdminActionListCreateView.as_view(), name='admin_action_list_create'),
     

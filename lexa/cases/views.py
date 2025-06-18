@@ -45,7 +45,7 @@ class CaseListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Case.objects.filter(user=self.request.user).select_related(
             'jurisdiction', 'case_type'
-        ).prefetch_related('audiences', 'documents')
+        ).prefetch_related('audiences')#(, 'documents') later zidha direct
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -62,7 +62,7 @@ class CaseDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Case.objects.filter(user=self.request.user).select_related(
             'jurisdiction', 'case_type'
-        ).prefetch_related('audiences', 'documents')
+        ).prefetch_related('audiences') #(,'documents') later zidha direct
 
 class AudienceListCreateView(generics.ListCreateAPIView):
     serializer_class = AudienceSerializer

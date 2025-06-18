@@ -3,8 +3,8 @@ from .models import BillingInfo, Invoice, InvoiceItem, Payment, Expense
 
 @admin.register(BillingInfo)
 class BillingInfoAdmin(admin.ModelAdmin):
-    list_display = ('invoice_number', 'case', 'fee_type', 'amount', 'payment_status', 'invoice_date')
-    list_filter = ('fee_type', 'payment_status', 'invoice_date', 'created_at')
+    list_display = ('invoice_number', 'case', 'payment_status', 'invoice_date')
+    list_filter = ( 'payment_status', 'invoice_date', 'created_at')
     search_fields = ('invoice_number', 'case__reference', 'case__title')
     ordering = ('-invoice_date',)
     readonly_fields = ('created_at', 'updated_at')

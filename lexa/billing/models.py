@@ -1,4 +1,4 @@
-# billing/models.py
+# models.py - Updated sections for better frontend compatibility
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
@@ -9,14 +9,6 @@ from cases.models import Case
 User = get_user_model()
 
 class BillingInfo(models.Model):
-    FEE_TYPE_CHOICES = [
-        ('fixed', _('Fixed Fee')),
-        ('hourly', _('Hourly Rate')),
-        ('contingency', _('Contingency Fee')),
-        ('retainer', _('Retainer')),
-        ('success', _('Success Fee')),
-    ]
-    
     PAYMENT_STATUS_CHOICES = [
         ('pending', _('Pending')),
         ('paid', _('Paid')),
@@ -26,10 +18,9 @@ class BillingInfo(models.Model):
     ]
 
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='billing_info')
+    client_name = models.CharField(max_length=200, default="client")  # Fixed typo from 'cleint'
     
     # Fee structure
-    fee_type = models.CharField(max_length=20, choices=FEE_TYPE_CHOICES)
-    amount = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     hours_worked = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     
@@ -52,6 +43,9 @@ class BillingInfo(models.Model):
     payment_date = models.DateField(null=True, blank=True)
     payment_method = models.CharField(max_length=50, blank=True)
     payment_reference = models.CharField(max_length=100, blank=True)
+    
+    # Calculated amount
+    amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     
     # Currency
     currency = models.CharField(max_length=3, default='DZD')
@@ -76,19 +70,16 @@ class BillingInfo(models.Model):
         return f"{self.invoice_number} - {self.case.reference}"
 
     @property
-    def total_amount(self):
-        """Calculate total amount including all fees and expenses"""
-        base_amount = self.amount
-        if self.fee_type == 'hourly' and self.hourly_rate:
-            base_amount = self.hourly_rate * self.hours_worked
-        
-        return base_amount + self.advanced_expenses + self.court_fees + self.administrative_fees
-
-    @property
     def is_overdue(self):
         """Check if payment is overdue"""
         from django.utils import timezone
         return self.payment_status == 'pending' and self.due_date < timezone.now().date()
+
+    def save(self, *args, **kwargs):
+        # Calculate total amount
+        base_amount = (self.hourly_rate or 0) * (self.hours_worked or 0)
+        self.amount = base_amount + self.advanced_expenses + self.court_fees + self.administrative_fees
+        super().save(*args, **kwargs)
 
 class Invoice(models.Model):
     INVOICE_STATUS_CHOICES = [
@@ -106,21 +97,21 @@ class Invoice(models.Model):
     due_date = models.DateField()
     
     # Client information
-    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='invoices')
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='invoices', null=True, blank=True)
     client_name = models.CharField(max_length=200)
-    client_address = models.TextField()
+    client_address = models.TextField(blank=True)
     client_email = models.EmailField(blank=True)
     client_phone = models.CharField(max_length=20, blank=True)
     
     # Invoice details
     status = models.CharField(max_length=20, choices=INVOICE_STATUS_CHOICES, default='draft')
-    subtotal = models.DecimalField(max_digits=15, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=19.00)  # TVA 19% in Algeria
-    tax_amount = models.DecimalField(max_digits=15, decimal_places=2)
-    total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     
     # Payment tracking
-    amount_paid = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    amount_paid = models.DecimalField(max_digits=15, decimal_places=2, default=0, blank=True)
     payment_date = models.DateField(null=True, blank=True)
     payment_method = models.CharField(max_length=50, blank=True)
     payment_reference = models.CharField(max_length=100, blank=True)
@@ -158,12 +149,18 @@ class Invoice(models.Model):
         from django.utils import timezone
         return self.status in ['sent', 'partially_paid'] and self.due_date < timezone.now().date()
 
+    def calculate_totals(self):
+        """Recalculate invoice totals based on items"""
+        self.subtotal = sum(item.total_price for item in self.items.all())
+        self.tax_amount = (self.subtotal * self.tax_rate) / 100
+        self.total_amount = self.subtotal + self.tax_amount
+
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='items')
     description = models.CharField(max_length=300)
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
-    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
-    total_price = models.DecimalField(max_digits=15, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # Maps to 'rate' in frontend
+    total_price = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # Maps to 'amount' in frontend
     
     # For hourly billing
     hours_worked = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
@@ -186,7 +183,13 @@ class InvoiceItem(models.Model):
         else:
             self.total_price = self.quantity * self.unit_price
         super().save(*args, **kwargs)
+        
+        # Update invoice totals
+        if self.invoice_id:
+            self.invoice.calculate_totals()
+            self.invoice.save()
 
+# Keep Payment and Expense models as they were - they're fine
 class Payment(models.Model):
     PAYMENT_METHOD_CHOICES = [
         ('cash', _('Cash')),

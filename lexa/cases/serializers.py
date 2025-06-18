@@ -46,7 +46,7 @@ class CaseSerializer(serializers.ModelSerializer):
     audiences = AudienceSerializer(many=True, read_only=True)
     metrics = CaseMetricSerializer(read_only=True)
     audiences_count = serializers.SerializerMethodField()
-    documents_count = serializers.SerializerMethodField()
+    # documents_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Case
@@ -56,8 +56,8 @@ class CaseSerializer(serializers.ModelSerializer):
     def get_audiences_count(self, obj):
         return obj.audiences.count()
 
-    def get_documents_count(self, obj):
-        return obj.documents.count()
+    # def get_documents_count(self, obj):
+    #     return obj.documents.count()
 
 class CaseCreateSerializer(serializers.ModelSerializer):
     class Meta:

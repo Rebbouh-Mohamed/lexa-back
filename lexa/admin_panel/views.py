@@ -159,3 +159,46 @@ def admin_dashboard_stats(request):
     }
     
     return Response(stats)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_user(request, user_id):
+    """Delete a user permanently"""
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Prevent admin from deleting themselves
+        if user.id == request.user.id:
+            return Response(
+                {'error': 'You cannot delete your own account'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Store user info for logging before deletion
+        user_email = user.email
+        user_name = f"{user.first_name} {user.last_name}".strip()
+        
+        # Log admin action before deleting the user
+        AdminAction.objects.create(
+            admin=request.user,
+            target_user=user,
+            action_type='user_deleted',
+            reason=request.data.get('reason', 'User deleted by admin'),
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')
+        )
+        
+        # Delete the user
+        user.delete()
+        
+        return Response({
+            'message': f'User {user_email} ({user_name}) deleted successfully'
+        })
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to delete user: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

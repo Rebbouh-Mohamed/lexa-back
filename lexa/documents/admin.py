@@ -10,7 +10,7 @@ class DocumentTemplateAdmin(admin.ModelAdmin):
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('title_fr', 'case', 'document_type', 'language', 'version', 'user', 'created_at')
+    list_display = ('title_fr', 'document_type', 'language', 'version', 'user', 'created_at')
     list_filter = ('document_type', 'language', 'is_final', 'is_confidential', 'created_at')
     search_fields = ('title_fr', 'title_ar', 'case__reference', 'case__title')
     ordering = ('-created_at',)
