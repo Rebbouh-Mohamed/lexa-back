@@ -23,16 +23,16 @@ class User(AbstractUser):
         ('cancelled', _('Cancelled')),
         ('expired', _('Expired')),
     ]
-    
+    username = models.CharField(_('username'), max_length=150, blank=True, null=True, unique=False)
     email = models.EmailField(_('email address'), unique=True)
     first_name = models.CharField(_('first name'), max_length=150)
     last_name = models.CharField(_('last name'), max_length=150)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='lawyer')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     subscription_status = models.CharField(
         max_length=20,
         choices=SUBSCRIPTION_STATUS_CHOICES,
-        default='trial'
+        default='active'
     )
     subscription_plan = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=20, blank=True)
@@ -44,7 +44,7 @@ class User(AbstractUser):
     last_sign_in_at = models.DateTimeField(null=True, blank=True)
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ['first_name', 'last_name']
     
     class Meta:
         verbose_name = _('User')

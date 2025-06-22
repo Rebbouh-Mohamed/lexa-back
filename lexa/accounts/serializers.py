@@ -36,8 +36,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'username', 'email', 'password', 'password_confirm',
-            'first_name', 'last_name', 'phone', 'bar_number', 'wilaya'
+            'first_name', 'last_name', 'phone', 'bar_number'
         ]
+        extra_kwargs = {
+            'username': {'required': False, 'allow_null': True},
+            'email': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'password': {'required': True}
+        }
     
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -45,10 +52,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return attrs
     
     def create(self, validated_data):
-        validated_data.pop('password_confirm')
-        user = User.objects.create_user(**validated_data)
+        validated_data.pop('password_confirm', None)
+        user = User.objects.create_user(
+            username=validated_data['email'].split("@")[0],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            phone=validated_data.get('phone', ''),
+            bar_number=validated_data.get('bar_number', '')
+        )
         UserProfile.objects.create(user=user)
-        return user
+        return user 
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
