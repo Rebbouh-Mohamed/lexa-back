@@ -23,10 +23,10 @@ class Jurisdiction(models.Model):
 
     name_fr = models.CharField(max_length=200)
     name_ar = models.CharField(max_length=200)
-    type_fr = models.CharField(max_length=50, choices=JURISDICTION_TYPES)
+    type_fr = models.CharField(max_length=50,default="")
     type_ar = models.CharField(max_length=200)
     wilaya = models.CharField(max_length=2)  # Algerian province code
-    level = models.CharField(max_length=20, choices=COURT_LEVELS)
+    level = models.CharField(max_length=20, default="",blank=True)
     
     # Court officials
     president = models.CharField(max_length=200, blank=True)
