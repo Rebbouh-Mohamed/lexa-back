@@ -12,7 +12,8 @@ staticfiles/
 venv/
 .env/
 .envrc
-
+dist/
+build/
 # IDE & Editor
 .vscode/
 .idea/
@@ -27,3 +28,5 @@ venv/
 .Trashes
 ehthumbs.db
 Thumbs.db
+manage.spec
+server.spec
