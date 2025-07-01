@@ -16,6 +16,28 @@ logging.basicConfig(
     ]
 )
 
+def setup_database():
+    """Handle database setup including migrations and sample data"""
+    # Apply database migrations
+    logging.info("Applying database migrations...")
+    try:
+        call_command('migrate', verbosity=0)
+        logging.info("Migrations applied successfully.")
+    except Exception as e:
+        logging.error(f"Error applying migrations: {e}")
+        # Don't exit - the app might still work
+
+    # Create sample data (only if needed)
+    logging.info("Checking for sample data...")
+    try:
+        # You can add a check here to see if sample data already exists
+        # For example, check if any records exist in your main model
+        
+        call_command('create_sample_data', verbosity=1)
+        logging.info("Sample data created successfully.")
+    except Exception as e:
+        logging.warning(f"Sample data creation failed or already exists: {e}")
+
 def run_server():
     try:
         # Set the Django settings module
@@ -24,14 +46,8 @@ def run_server():
         # Initialize Django
         django.setup()
         
-        # Apply database migrations
-        logging.info("Applying database migrations...")
-        try:
-            call_command('migrate', verbosity=0)
-            logging.info("Migrations applied successfully.")
-        except Exception as e:
-            logging.error(f"Error applying migrations: {e}")
-            # Don't exit - the app might still work
+        # Setup database and sample data
+        setup_database()
         
         # Collect static files (if needed)
         try:
