@@ -30,20 +30,31 @@ def setup_database():
     # Create superuser (only if needed)
     logging.info("Checking for superuser...")
     try:
-        from django.contrib.auth.models import User
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
         
         # Check if any superuser already exists
         if User.objects.filter(is_superuser=True).exists():
             logging.info("Superuser already exists, skipping creation.")
         else:
-            # Create superuser with default credentials
-            # You can modify these values as needed
-            username = 'admin'
-            email = 'admin@example.com'
-            password = 'admin123'  # Change this to a secure password
+            # Create superuser with detailed custom fields
+            superuser_data = {
+                'email': 'admin@example.com',
+                'password': 'admin123',  # Change this to a secure password
+                'first_name': 'System',
+                'last_name': 'Administrator',
+                'role': 'admin',
+                'status': 'active',
+                'subscription_status': 'active',
+                'subscription_plan': 'unlimited',
+                'phone': '+213555000000',  # Example Algerian phone
+                'address': 'System Admin Address',
+                'wilaya': '16',  # Algiers province code
+            }
             
-            User.objects.create_superuser(username=username, email=email, password=password)
-            logging.info(f"Superuser '{username}' created successfully with password '{password}'")
+            user = User.objects.create_superuser(**superuser_data)
+            logging.info(f"Superuser '{superuser_data['email']}' created successfully")
+            logging.info(f"Login credentials - Email: {superuser_data['email']}, Password: {superuser_data['password']}")
             
     except Exception as e:
         logging.warning(f"Superuser creation failed: {e}")
@@ -77,6 +88,7 @@ def run_server():
             try:
                 httpd = simple_server.make_server('127.0.0.1', port, application)
                 logging.info(f"Django server running on http://127.0.0.1:{port}")
+                logging.info(f"Admin panel available at: http://127.0.0.1:{port}/admin/")
                 server_started = True
                 break
             except OSError as e:
