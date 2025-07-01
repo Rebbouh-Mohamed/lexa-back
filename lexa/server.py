@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 def setup_database():
-    """Handle database setup including migrations and sample data"""
+    """Handle database setup including migrations and superuser creation"""
     # Apply database migrations
     logging.info("Applying database migrations...")
     try:
@@ -26,17 +26,27 @@ def setup_database():
     except Exception as e:
         logging.error(f"Error applying migrations: {e}")
         # Don't exit - the app might still work
-
-    # Create sample data (only if needed)
-    logging.info("Checking for sample data...")
+    
+    # Create superuser (only if needed)
+    logging.info("Checking for superuser...")
     try:
-        # You can add a check here to see if sample data already exists
-        # For example, check if any records exist in your main model
+        from django.contrib.auth.models import User
         
-        call_command('create_sample_data', verbosity=1)
-        logging.info("Sample data created successfully.")
+        # Check if any superuser already exists
+        if User.objects.filter(is_superuser=True).exists():
+            logging.info("Superuser already exists, skipping creation.")
+        else:
+            # Create superuser with default credentials
+            # You can modify these values as needed
+            username = 'admin'
+            email = 'admin@example.com'
+            password = 'admin123'  # Change this to a secure password
+            
+            User.objects.create_superuser(username=username, email=email, password=password)
+            logging.info(f"Superuser '{username}' created successfully with password '{password}'")
+            
     except Exception as e:
-        logging.warning(f"Sample data creation failed or already exists: {e}")
+        logging.warning(f"Superuser creation failed: {e}")
 
 def run_server():
     try:
@@ -46,7 +56,7 @@ def run_server():
         # Initialize Django
         django.setup()
         
-        # Setup database and sample data
+        # Setup database and superuser
         setup_database()
         
         # Collect static files (if needed)
