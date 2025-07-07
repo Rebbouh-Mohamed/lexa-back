@@ -18,29 +18,39 @@ logging.basicConfig(
 
 def setup_database():
     """Handle database setup including migrations and superuser creation"""
+    from django.conf import settings
+    import os
+
+    database_path = settings.DATABASES['default']['NAME']
+    database_exists = os.path.exists(database_path)
+
     # Apply database migrations
-    logging.info("Applying database migrations...")
+    logging.info("Checking database migrations...")
     try:
-        call_command('migrate', verbosity=0)
-        logging.info("Migrations applied successfully.")
+        if not database_exists:
+            logging.info("Database not found, applying migrations...")
+            call_command('migrate', verbosity=0)
+            logging.info("Migrations applied successfully.")
+        else:
+            logging.info("Database exists, checking for pending migrations...")
+            call_command('migrate', verbosity=0)
+            logging.info("Pending migrations applied successfully.")
     except Exception as e:
         logging.error(f"Error applying migrations: {e}")
-        # Don't exit - the app might still work
-    
+        # Continue running even if migrations fail, as the app might still function
+
     # Create superuser (only if needed)
     logging.info("Checking for superuser...")
     try:
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        
-        # Check if any superuser already exists
+
         if User.objects.filter(is_superuser=True).exists():
             logging.info("Superuser already exists, skipping creation.")
         else:
-            # Create superuser with detailed custom fields
             superuser_data = {
                 'email': 'admin@example.com',
-                'password': 'admin123',  # Change this to a secure password
+                'password': 'admin123',  # Use a secure password in production
                 'first_name': 'System',
                 'last_name': 'Administrator',
                 'role': 'admin',
@@ -51,11 +61,10 @@ def setup_database():
                 'address': 'System Admin Address',
                 'wilaya': '16',  # Algiers province code
             }
-            
-            user = User.objects.create_superuser(**superuser_data)
+
+            User.objects.create_superuser(**superuser_data)
             logging.info(f"Superuser '{superuser_data['email']}' created successfully")
             logging.info(f"Login credentials - Email: {superuser_data['email']}, Password: {superuser_data['password']}")
-            
     except Exception as e:
         logging.warning(f"Superuser creation failed: {e}")
 
