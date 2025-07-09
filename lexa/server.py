@@ -27,6 +27,7 @@ def setup_database():
     # Apply database migrations
     logging.info("Checking database migrations...")
     try:
+        logging.info(f"Database{database_path},,{database_exists}")
         if not database_exists:
             logging.info("Database not found, applying migrations...")
             call_command('migrate', verbosity=0)
@@ -51,6 +52,7 @@ def setup_database():
             superuser_data = {
                 'email': 'admin@example.com',
                 'password': 'admin123',  # Use a secure password in production
+                "username":"admin",
                 'first_name': 'System',
                 'last_name': 'Administrator',
                 'role': 'admin',

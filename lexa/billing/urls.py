@@ -3,8 +3,10 @@ from . import views
 
 urlpatterns = [
     # Billing Info
-    path('billing/', views.BillingInfoListCreateView.as_view(), name='billing_list_create'),
-    path('billing/<int:pk>/', views.BillingInfoDetailView.as_view(), name='billing_detail'),
+    # path('billing/', views.BillingInfoListCreateView.as_view(), name='billing_list_create'),
+    path('billing/', views.InvoiceListCreateView.as_view(), name='billing_list_create'),
+
+    path('billing/<int:pk>/', views.InvoiceDetailView.as_view(), name='billing_detail'),
     
     # Invoices
     path('invoices/<int:pk>/', views.InvoiceDetailView.as_view(), name='invoice_detail'),

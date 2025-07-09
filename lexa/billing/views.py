@@ -23,6 +23,7 @@ class BillingInfoListCreateView(generics.ListCreateAPIView):
         return BillingInfo.objects.filter(user=self.request.user).select_related('case')
 
     def create(self, request, *args, **kwargs):
+        print(request.data)
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
             print(request.data)
@@ -37,11 +38,23 @@ class BillingInfoDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return BillingInfo.objects.filter(user=self.request.user)
 
+# class InvoiceListCreateView(generics.ListCreateAPIView):
+#     serializer_class = InvoiceSerializer
+#     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+#     filterset_fields = ['case', 'status']
+#     search_fields = ['invoice_number', 'client_name', 'case__reference']
+#     ordering_fields = ['invoice_date', 'due_date', 'total_amount']
+
+#     def get_queryset(self):
+#         return Invoice.objects.filter(user=self.request.user).select_related('case')
+
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
 class InvoiceListCreateView(generics.ListCreateAPIView):
     serializer_class = InvoiceSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['case', 'status']
-    search_fields = ['invoice_number', 'client_name', 'case__reference']
+    search_fields = ['invoice_number', 'client_name', 'case__reference', 'case__title']
     ordering_fields = ['invoice_date', 'due_date', 'total_amount']
 
     def get_queryset(self):
